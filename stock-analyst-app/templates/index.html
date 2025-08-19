@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analyst Dashboard - AI-Powered Trading Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                Stock Analyst Pro
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-clock me-1"></i>
+                    {{ current_time }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Alert Section -->
+        <div id="alertContainer"></div>
+        
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- Controls Section -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Analysis Controls
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="stockSymbols" class="form-label">Stock Symbols (comma-separated)</label>
+                                <input type="text" class="form-control" id="stockSymbols" 
+                                       placeholder="INFY, TCS, RELIANCE, HDFCBANK" 
+                                       value="INFY, TCS, RELIANCE, HDFCBANK, ICICIBANK">
+                                <small class="text-muted">
+                                    💡 Try: "Suzlon Energy", "Reliance Industries", "Tata Motors", or use symbols like SUZLON, RELIANCE, TATAMOTORS
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="deepAnalysisQuery" class="form-label">Deep Analysis Query</label>
+                                <input type="text" class="form-control" id="deepAnalysisQuery" 
+                                       placeholder="Enter company name or symbol for deep analysis">
+                                <small class="text-muted">
+                                    🔍 AI-powered search with comprehensive analysis
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="btn-group d-flex" role="group">
+                                    <button class="btn btn-primary" onclick="runAnalysis()">
+                                        <i class="fas fa-play me-1"></i>
+                                        Quick Analysis
+                                    </button>
+                                    <button class="btn btn-success" onclick="runDeepAnalysis()">
+                                        <i class="fas fa-search-plus me-1"></i>
+                                        Deep Analysis
+                                    </button>
+                                </div>
+                                <div class="btn-group d-flex mt-2" role="group">
+                                    <button class="btn btn-info btn-sm" onclick="loadMarketNews()">
+                                        <i class="fas fa-newspaper me-1"></i>
+                                        News
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="searchStock()">
+                                        <i class="fas fa-lightbulb me-1"></i>
+                                        Smart Search
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Overview -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-area me-2"></i>
+                            Market Overview
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="marketOverview" class="row">
+                            <div class="col-md-4">
+                                <div class="market-index">
+                                    <h6>NIFTY 50</h6>
+                                    <div class="h4" id="niftyPrice">Loading...</div>
+                                    <small id="niftyChange" class="text-muted">--</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="market-index">
+                                    <h6>SENSEX</h6>
+                                    <div class="h4" id="sensexPrice">Loading...</div>
+                                    <small id="sensexChange" class="text-muted">--</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="market-index">
+                                    <h6>BANK NIFTY</h6>
+                                    <div class="h4" id="bankNiftyPrice">Loading...</div>
+                                    <small id="bankNiftyChange" class="text-muted">--</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Row -->
+        <div class="row">
+            <!-- Recommendations Panel -->
+            <div class="col-md-8">
+                <!-- Deep Analysis Results -->
+                <div id="deepAnalysisSection" class="card mb-4 d-none">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-search-plus me-2"></i>
+                            Deep Analysis Results
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="deepAnalysisContent">
+                            <!-- Deep analysis content will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regular Recommendations -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-recommendations me-2"></i>
+                            AI Recommendations
+                        </h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="exportRecommendations()">
+                                <i class="fas fa-download me-1"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingSpinner" class="text-center d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Analyzing stocks with AI agents...</p>
+                        </div>
+                        
+                        <div id="recommendationsTable">
+                            {% if recommendations %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Action</th>
+                                            <th>Confidence</th>
+                                            <th>Reasoning</th>
+                                            <th>Risk Level</th>
+                                            <th>Price Info</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for rec in recommendations %}
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong class="text-primary">{{ rec.symbol }}</strong>
+                                                    {% if rec.metadata and rec.metadata.company_name %}
+                                                    <br><small class="text-muted">{{ rec.metadata.company_name }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if rec.action == 'BUY' %}bg-success
+                                                    {% elif rec.action == 'SELL' %}bg-danger
+                                                    {% else %}bg-warning{% endif %}">
+                                                    {{ rec.action }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% set confidence_pct = (rec.confidence * 100) if rec.confidence else 50 %}
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar 
+                                                        {% if confidence_pct >= 70 %}bg-success
+                                                        {% elif confidence_pct >= 50 %}bg-warning
+                                                        {% else %}bg-danger{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ confidence_pct }}%">
+                                                        {{ "%.0f%%"|format(confidence_pct) }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="reasoning-cell" style="max-width: 300px;">
+                                                    <div class="reasoning-short">
+                                                        {{ rec.reasoning[:150] }}{% if rec.reasoning|length > 150 %}...{% endif %}
+                                                    </div>
+                                                    {% if rec.reasoning|length > 150 %}
+                                                    <button class="btn btn-sm btn-link p-0 mt-1" onclick="toggleReasoning(this)">
+                                                        <small>Show more</small>
+                                                    </button>
+                                                    <div class="reasoning-full d-none">
+                                                        {{ rec.reasoning }}
+                                                        <button class="btn btn-sm btn-link p-0 mt-1" onclick="toggleReasoning(this)">
+                                                            <small>Show less</small>
+                                                        </button>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% set risk_level = rec.metadata.risk_level if rec.metadata and rec.metadata.risk_level else 'MEDIUM' %}
+                                                <span class="badge 
+                                                    {% if risk_level == 'LOW' %}bg-success
+                                                    {% elif risk_level == 'MEDIUM' %}bg-warning
+                                                    {% else %}bg-danger{% endif %}">
+                                                    {{ risk_level }}
+                                                </span>
+                                                {% if rec.metadata and rec.metadata.volatility %}
+                                                <br><small class="text-muted">Vol: {{ "%.1f%%"|format(rec.metadata.volatility * 100) }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if rec.metadata and rec.metadata.current_price %}
+                                                <div>
+                                                    <strong>₹{{ "%.2f"|format(rec.metadata.current_price) }}</strong>
+                                                    {% if rec.metadata.price_change %}
+                                                    <br><small class="{% if rec.metadata.price_change > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                        {% if rec.metadata.price_change > 0 %}+{% endif %}{{ "%.2f"|format(rec.metadata.price_change) }}
+                                                        {% if rec.metadata.price_change_percent %}
+                                                        ({{ "%.1f%%"|format(rec.metadata.price_change_percent) }})
+                                                        {% endif %}
+                                                    </small>
+                                                    {% endif %}
+                                                </div>
+                                                {% else %}
+                                                <small class="text-muted">N/A</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ rec.timestamp.strftime('%H:%M') if rec.timestamp else 'N/A' }}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No recommendations available</h5>
+                                <p class="text-muted">Click "Run Analysis" to generate AI-powered stock recommendations</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- News & Insights Panel -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-newspaper me-2"></i>
+                            Market News
+                        </h5>
+                    </div>
+                    <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                        <div id="newsContainer">
+                            <div class="text-center py-3">
+                                <i class="fas fa-rss fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">Click "Load News" to fetch latest market updates</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Market Insights Section -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Market Insights & Analytics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <i class="fas fa-arrow-up text-success fa-2x mb-2"></i>
+                                    <h6>Bullish Signals</h6>
+                                    <span id="bullishCount" class="badge bg-success fs-6">0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <i class="fas fa-arrow-down text-danger fa-2x mb-2"></i>
+                                    <h6>Bearish Signals</h6>
+                                    <span id="bearishCount" class="badge bg-danger fs-6">0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <i class="fas fa-minus text-warning fa-2x mb-2"></i>
+                                    <h6>Hold Signals</h6>
+                                    <span id="holdCount" class="badge bg-warning fs-6">0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <i class="fas fa-percentage text-info fa-2x mb-2"></i>
+                                    <h6>Avg Confidence</h6>
+                                    <span id="avgConfidence" class="badge bg-info fs-6">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>High Risk Stocks</h6>
+                                        <div id="highRiskStocks">
+                                            <small class="text-muted">No high-risk stocks identified yet</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-star text-success me-2"></i>Top Opportunities</h6>
+                                        <div id="topOpportunities">
+                                            <small class="text-muted">No opportunities identified yet</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-robot me-2"></i>
+                Powered by AI Agents & Claude Sonnet 3.5 | 
+                <small>Data provided by NSE/BSE APIs</small>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        let charts = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMarketData();
+            updateInsightsSummary();
+        });
+
+        // Run AI analysis
+        async function runAnalysis() {
+            const symbols = document.getElementById('stockSymbols').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+
+            if (symbols.length === 0) {
+                showAlert('Please enter at least one stock symbol', 'warning');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingSpinner').classList.remove('d-none');
+            document.getElementById('recommendationsTable').style.opacity = '0.5';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ stocks: symbols })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    updateRecommendationsTable(data.recommendations);
+                    updateInsightsSummary(data.recommendations);
+                    showAlert('Analysis completed successfully!', 'success');
+                } else {
+                    showAlert('Analysis failed: ' + (data.message || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showAlert('Failed to run analysis: ' + error.message, 'danger');
+            } finally {
+                // Hide loading
+                document.getElementById('loadingSpinner').classList.add('d-none');
+                document.getElementById('recommendationsTable').style.opacity = '1';
+            }
+        }
+
+        // Run deep analysis using Tavily API
+        async function runDeepAnalysis() {
+            const query = document.getElementById('deepAnalysisQuery').value.trim();
+
+            if (!query) {
+                showAlert('Please enter a company name or stock symbol for deep analysis', 'warning');
+                return;
+            }
+
+            // Show loading
+            const deepSection = document.getElementById('deepAnalysisSection');
+            const deepContent = document.getElementById('deepAnalysisContent');
+            
+            deepSection.classList.remove('d-none');
+            deepContent.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">🔍 Performing comprehensive analysis using AI search...</p>
+                    <small class="text-muted">This may take 10-30 seconds</small>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/analyze_deep', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    displayDeepAnalysisResults(data.deep_analysis, data.recommendation);
+                    showAlert(`Deep analysis completed for "${query}"!`, 'success');
+                } else {
+                    showAlert('Deep analysis failed: ' + (data.message || 'Unknown error'), 'danger');
+                    deepSection.classList.add('d-none');
+                }
+            } catch (error) {
+                console.error('Deep analysis error:', error);
+                showAlert('Failed to run deep analysis: ' + error.message, 'danger');
+                deepSection.classList.add('d-none');
+            }
+        }
+
+        // Display deep analysis results
+        function displayDeepAnalysisResults(deepAnalysis, recommendation) {
+            const deepContent = document.getElementById('deepAnalysisContent');
+            
+            const searchResults = deepAnalysis.search_results || {};
+            const claudeAnalysis = deepAnalysis.claude_analysis || {};
+            const basicInfo = searchResults.basic_info || {};
+            const newsSentiment = searchResults.news_sentiment || {};
+            
+            // Get structured analysis data
+            const decision = claudeAnalysis.investment_decision || 'HOLD';
+            const confidence = claudeAnalysis.confidence_percentage || 50;
+            const riskLevel = claudeAnalysis.risk_level || 'MEDIUM';
+            const priceTargets = claudeAnalysis.price_targets || {};
+            const actionPlan = claudeAnalysis.action_plan || {};
+            const investmentThesis = claudeAnalysis.investment_thesis || {};
+            const keyCatalysts = claudeAnalysis.key_catalysts || {};
+            
+            let html = `
+                <!-- Investment Decision Header -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="alert ${decision === 'BUY' ? 'alert-success' : decision === 'SELL' ? 'alert-danger' : 'alert-warning'} text-center">
+                            <h4><i class="fas ${decision === 'BUY' ? 'fa-arrow-up' : decision === 'SELL' ? 'fa-arrow-down' : 'fa-minus'} me-2"></i>
+                                INVESTMENT DECISION: <strong>${decision}</strong>
+                            </h4>
+                            <p class="mb-0">Confidence: <strong>${confidence}%</strong> | Risk Level: <strong>${riskLevel}</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Dashboard -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center border-primary">
+                            <div class="card-body">
+                                <h5 class="text-primary">Current Price</h5>
+                                <h3>₹${priceTargets.current_price || 'N/A'}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-success">
+                            <div class="card-body">
+                                <h5 class="text-success">3M Target</h5>
+                                <h3>₹${priceTargets.target_3_months || 'N/A'}</h3>
+                                <small>${priceTargets.target_3_months && priceTargets.current_price ? 
+                                    ((priceTargets.target_3_months - priceTargets.current_price) / priceTargets.current_price * 100).toFixed(1) + '%' : ''}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-info">
+                            <div class="card-body">
+                                <h5 class="text-info">1Y Target</h5>
+                                <h3>₹${priceTargets.target_1_year || 'N/A'}</h3>
+                                <small>${priceTargets.target_1_year && priceTargets.current_price ? 
+                                    ((priceTargets.target_1_year - priceTargets.current_price) / priceTargets.current_price * 100).toFixed(1) + '%' : ''}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-danger">
+                            <div class="card-body">
+                                <h5 class="text-danger">Stop Loss</h5>
+                                <h3>₹${priceTargets.stop_loss || 'N/A'}</h3>
+                                <small>${priceTargets.stop_loss && priceTargets.current_price ? 
+                                    ((priceTargets.stop_loss - priceTargets.current_price) / priceTargets.current_price * 100).toFixed(1) + '%' : ''}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Plan -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Action Plan</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-play text-success me-2"></i>Immediate Action</h6>
+                                        <p class="border-start border-success ps-3">${actionPlan.immediate_action || 'Monitor market conditions'}</p>
+                                        
+                                        <h6><i class="fas fa-hand-paper text-warning me-2"></i>Hold Strategy</h6>
+                                        <p class="border-start border-warning ps-3">${actionPlan.hold_strategy || 'Maintain position with regular review'}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-sign-out-alt text-danger me-2"></i>Exit Strategy</h6>
+                                        <p class="border-start border-danger ps-3">${actionPlan.exit_strategy || 'Exit if fundamentals change'}</p>
+                                        
+                                        <h6><i class="fas fa-chart-pie text-info me-2"></i>Portfolio Allocation</h6>
+                                        <p class="border-start border-info ps-3">${actionPlan.portfolio_allocation || '3-5% of portfolio'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Thesis -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-success h-100">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-thumbs-up me-2"></i>Bull Case</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+            `;
+            
+            (investmentThesis.bull_case || []).forEach(point => {
+                html += `<li><i class="fas fa-plus text-success me-2"></i>${point}</li>`;
+            });
+            
+            html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-danger h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0"><i class="fas fa-thumbs-down me-2"></i>Bear Case</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+            `;
+            
+            (investmentThesis.bear_case || []).forEach(point => {
+                html += `<li><i class="fas fa-minus text-danger me-2"></i>${point}</li>`;
+            });
+            
+            html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-secondary h-100">
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0"><i class="fas fa-balance-scale me-2"></i>Neutral Factors</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+            `;
+            
+            (investmentThesis.neutral_factors || []).forEach(point => {
+                html += `<li><i class="fas fa-circle text-secondary me-2"></i>${point}</li>`;
+            });
+            
+            html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Performance & Analyst Data -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        ${displayHistoricalData(searchResults.historical_analysis)}
+                    </div>
+                    <div class="col-md-6">
+                        ${displayAnalystData(searchResults.analyst_reports)}
+                    </div>
+                </div>
+
+                <!-- Key Catalysts & Timeline -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-rocket me-2"></i>Positive Catalysts</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+            `;
+            
+            (keyCatalysts.positive_catalysts || []).forEach(catalyst => {
+                html += `<li><i class="fas fa-arrow-up text-success me-2"></i>${catalyst}</li>`;
+            });
+            
+            html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Risk Factors</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+            `;
+            
+            (keyCatalysts.negative_risks || []).forEach(risk => {
+                html += `<li><i class="fas fa-arrow-down text-danger me-2"></i>${risk}</li>`;
+            });
+            
+            html += `
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Investment Horizons -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Investment Horizons & Targets</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-3">
+                                            <h6>Short Term</h6>
+                                            <p class="text-muted">${claudeAnalysis.investment_horizon?.short_term || '1-3 months'}</p>
+                                            <h5 class="text-success">₹${priceTargets.target_3_months || 'N/A'}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-3">
+                                            <h6>Medium Term</h6>
+                                            <p class="text-muted">${claudeAnalysis.investment_horizon?.medium_term || '6-12 months'}</p>
+                                            <h5 class="text-info">₹${priceTargets.target_6_months || 'N/A'}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-3">
+                                            <h6>Long Term</h6>
+                                            <p class="text-muted">${claudeAnalysis.investment_horizon?.long_term || '1-3 years'}</p>
+                                            <h5 class="text-primary">₹${priceTargets.target_1_year || 'N/A'}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border rounded p-3 bg-light">
+                                            <h6>Review Frequency</h6>
+                                            <p class="text-muted">${claudeAnalysis.review_frequency || 'Monthly'}</p>
+                                            <h6 class="text-warning">Monitor Closely</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Performance & Analyst Data -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        ${displayHistoricalData(searchResults.historical_analysis)}
+                    </div>
+                    <div class="col-md-6">
+                        ${displayAnalystData(searchResults.analyst_reports)}
+                    </div>
+                </div>
+
+                <!-- Detailed Analysis -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-microscope me-2"></i>Detailed Analysis & Reasoning</h6>
+                            </div>
+                            <div class="card-body">
+                                <div style="max-height: 300px; overflow-y: auto;">
+                                    ${claudeAnalysis.detailed_reasoning || 'Analysis in progress...'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monitoring Dashboard -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card border-dark">
+                            <div class="card-header bg-dark text-white">
+                                <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Key Metrics to Monitor</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="d-flex flex-wrap">
+            `;
+            
+            (claudeAnalysis.monitor_metrics || ['Price', 'Volume', 'News']).forEach(metric => {
+                html += `<span class="badge bg-secondary me-2 mb-2">${metric}</span>`;
+            });
+            
+            html += `
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>Last Updated: ${claudeAnalysis.last_updated || new Date().toLocaleDateString()}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="alert ${decision === 'BUY' ? 'alert-success' : decision === 'SELL' ? 'alert-danger' : 'alert-warning'} text-center">
+                            <h5><strong>SUMMARY: ${decision} ${basicInfo.company_name || 'Stock'}</strong></h5>
+                            <p class="mb-0">
+                                ${decision === 'BUY' ? 
+                                    `🎯 Buy at current levels with target of ₹${priceTargets.target_1_year || 'TBD'} over ${claudeAnalysis.investment_horizon?.long_term || '1 year'}` :
+                                decision === 'SELL' ?
+                                    `⚠️ Consider selling with stop loss at ₹${priceTargets.stop_loss || 'TBD'}` :
+                                    `📊 Hold and monitor key catalysts. Review ${claudeAnalysis.review_frequency?.toLowerCase() || 'monthly'}`
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            deepContent.innerHTML = html;
+        }
+
+        // Helper function to display historical data
+        function displayHistoricalData(historical) {
+            if (!historical) return '<div class="card h-100"><div class="card-body text-muted">No historical data available</div></div>';
+            
+            let html = `
+                <div class="card border-info h-100">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Historical Performance</h6>
+                    </div>
+                    <div class="card-body">
+            `;
+            
+            // Performance periods
+            if (historical.performance_periods && Object.keys(historical.performance_periods).length > 0) {
+                html += '<h6>Performance:</h6><ul class="list-unstyled>';
+                Object.entries(historical.performance_periods).forEach(([period, value]) => {
+                    const isPositive = parseFloat(value) > 0;
+                    html += `<li><strong>${period}:</strong> 
+                        <span class="${isPositive ? 'text-success' : 'text-danger'}">
+                            ${value}
+                        </span>
+                    </li>`;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p>No performance data available.</p>';
+            }
+            
+            // Volatility and trend
+            html += `
+                <p><strong>Volatility:</strong> 
+                    <span class="badge bg-${
+                        historical.volatility_assessment === 'low' ? 'success' : 
+                        historical.volatility_assessment === 'medium' ? 'warning' : 'danger'
+                    }">${historical.volatility_assessment || 'medium'}</span>
+                </p>
+                <p><strong>Long-term Trend:</strong> 
+                    <span class="badge bg-${
+                        historical.long_term_trend === 'positive' ? 'success' : 
+                        historical.long_term_trend === 'neutral' ? 'secondary' : 'danger'
+                    }">${historical.long_term_trend || 'neutral'}</span>
+                </p>
+            `;
+            
+            // Key events
+            if (historical.key_events && historical.key_events.length > 0) {
+                html += '<h6>Key Events:</h6><ul class="small">';
+                historical.key_events.slice(0, 3).forEach(event => {
+                    html += `<li>${event}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            html += '</div></div>';
+            return html;
+        }
+
+        // Helper function to display analyst data
+        function displayAnalystData(analyst) {
+            if (!analyst) return '<div class="card h-100"><div class="card-body text-muted">No analyst data available</div></div>';
+            
+            let html = `
+                <div class="card border-secondary h-100">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="fas fa-users me-2"></i>Analyst Consensus</h6>
+                    </div>
+                    <div class="card-body">
+            `;
+            
+            // Consensus rating
+            html += `
+                <p><strong>Consensus:</strong> 
+                    <span class="badge bg-${
+                        analyst.consensus_rating === 'buy' ? 'success' : 
+                        analyst.consensus_rating === 'hold' ? 'warning' : 'danger'
+                    }">${analyst.consensus_rating || 'neutral'}</span>
+                </p>
+            `;
+            
+            // Target prices
+            if (analyst.target_prices && analyst.target_prices.length > 0) {
+                html += '<h6>Target Prices:</h6><ul class="small">';
+                analyst.target_prices.slice(0, 3).forEach(target => {
+                    html += `<li>${target}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            // Rating distribution
+            if (analyst.rating_distribution && Object.keys(analyst.rating_distribution).length > 0) {
+                html += '<h6>Ratings:</h6><ul class="small">';
+                Object.entries(analyst.rating_distribution).forEach(([rating, count]) => {
+                    html += `<li><strong>${rating}:</strong> ${count}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            html += '</div></div>';
+            return html;
+        }
+
+        // Update insights summary
+        function updateInsightsSummary(recommendations = []) {
+            if (!recommendations || recommendations.length === 0) {
+                document.getElementById('bullishCount').textContent = '0';
+                document.getElementById('bearishCount').textContent = '0';
+                document.getElementById('holdCount').textContent = '0';
+                document.getElementById('avgConfidence').textContent = '0%';
+                return;
+            }
+
+            let bullishCount = 0;
+            let bearishCount = 0;
+            let holdCount = 0;
+            let totalConfidence = 0;
+            let highRiskStocks = [];
+            let topOpportunities = [];
+
+            recommendations.forEach(rec => {
+                if (rec.action === 'BUY') bullishCount++;
+                else if (rec.action === 'SELL') bearishCount++;
+                else holdCount++;
+
+                totalConfidence += (rec.confidence || 0.5) * 100;
+
+                // Check for high risk stocks
+                if (rec.metadata && rec.metadata.risk_level === 'HIGH') {
+                    highRiskStocks.push(rec);
+                }
+
+                // Check for high confidence opportunities
+                if (rec.action === 'BUY' && (rec.confidence || 0) > 0.7) {
+                    topOpportunities.push(rec);
+                }
+            });
+
+            const avgConfidence = recommendations.length > 0 ? (totalConfidence / recommendations.length).toFixed(0) : 0;
+
+            document.getElementById('bullishCount').textContent = bullishCount;
+            document.getElementById('bearishCount').textContent = bearishCount;
+            document.getElementById('holdCount').textContent = holdCount;
+            document.getElementById('avgConfidence').textContent = avgConfidence + '%';
+
+            // Update high risk stocks
+            const highRiskContainer = document.getElementById('highRiskStocks');
+            if (highRiskStocks.length > 0) {
+                highRiskContainer.innerHTML = highRiskStocks.map(stock => 
+                    `<div class="mb-1">
+                        <span class="badge bg-danger me-1">${stock.symbol}</span>
+                        <small class="text-muted">${stock.action}</small>
+                    </div>`
+                ).join('');
+            } else {
+                highRiskContainer.innerHTML = '<small class="text-muted">No high-risk stocks identified</small>';
+            }
+
+            // Update top opportunities
+            const opportunitiesContainer = document.getElementById('topOpportunities');
+            if (topOpportunities.length > 0) {
+                opportunitiesContainer.innerHTML = topOpportunities.map(stock => 
+                    `<div class="mb-1">
+                        <span class="badge bg-success me-1">${stock.symbol}</span>
+                        <small class="text-muted">${Math.round((stock.confidence || 0) * 100)}% confidence</small>
+                    </div>`
+                ).join('');
+            } else {
+                opportunitiesContainer.innerHTML = '<small class="text-muted">No high-confidence opportunities</small>';
+            }
+        }
+
+        // Toggle reasoning text
+        function toggleReasoning(button) {
+            const cell = button.closest('.reasoning-cell');
+            const shortText = cell.querySelector('.reasoning-short');
+            const fullText = cell.querySelector('.reasoning-full');
+            
+            if (fullText.classList.contains('d-none')) {
+                shortText.style.display = 'none';
+                fullText.classList.remove('d-none');
+            } else {
+                shortText.style.display = 'block';
+                fullText.classList.add('d-none');
+            }
+        }
+
+        // Update recommendations table
+        function updateRecommendationsTable(recommendations) {
+            if (!recommendations || recommendations.length === 0) return;
+            
+            // This would update the table content dynamically
+            // For now, we'll rely on server-side rendering
+            window.location.reload();
+        }
+
+        // Load market news
+        async function loadMarketNews() {
+            const container = document.getElementById('newsContainer');
+            container.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Loading news...</div>';
+
+            try {
+                const response = await fetch('/api/news');
+                const data = await response.json();
+
+                if (data.status === 'success' && data.news.length > 0) {
+                    let newsHTML = '';
+                    data.news.slice(0, 10).forEach(news => {
+                        const sentimentClass = news.sentiment > 0.1 ? 'text-success' : 
+                                             news.sentiment < -0.1 ? 'text-danger' : 'text-muted';
+                        const sentimentIcon = news.sentiment > 0.1 ? 'fas fa-arrow-up' :
+                                            news.sentiment < -0.1 ? 'fas fa-arrow-down' : 'fas fa-minus';
+
+                        newsHTML += `
+                            <div class="news-item border-bottom pb-3 mb-3">
+                                <h6 class="mb-1">
+                                    <a href="${news.url}" target="_blank" class="text-decoration-none">
+                                        ${news.title}
+                                    </a>
+                                </h6>
+                                <p class="small text-muted mb-1">${news.summary || news.content.substring(0, 100)}...</p>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">${news.source}</small>
+                                    <small class="${sentimentClass}">
+                                        <i class="${sentimentIcon}"></i>
+                                        Sentiment: ${(news.sentiment * 100).toFixed(0)}%
+                                    </small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = newsHTML;
+                } else {
+                    container.innerHTML = '<div class="text-center text-muted">No news available</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="text-center text-danger">Failed to load news</div>';
+            }
+        }
+
+        // Load market data
+        async function loadMarketData() {
+            // This would typically load real market indices
+            // For demo purposes, we'll use placeholder data
+            document.getElementById('niftyPrice').textContent = '19,850.25';
+            document.getElementById('niftyChange').innerHTML = '<span class="text-success">+125.30 (+0.63%)</span>';
+            
+            document.getElementById('sensexPrice').textContent = '66,428.09';
+            document.getElementById('sensexChange').innerHTML = '<span class="text-success">+284.30 (+0.43%)</span>';
+            
+            document.getElementById('bankNiftyPrice').textContent = '45,234.75';
+            document.getElementById('bankNiftyChange').innerHTML = '<span class="text-danger">-123.45 (-0.27%)</span>';
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const alertHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            document.getElementById('alertContainer').innerHTML = alertHTML;
+        }
+
+        // Export recommendations
+        function exportRecommendations() {
+            // This would implement CSV/PDF export functionality
+            showAlert('Export functionality would be implemented here', 'info');
+        }
+
+        // Smart stock search functionality
+        function searchStock() {
+            const input = document.getElementById('stockSymbols').value.trim();
+            if (!input) {
+                showAlert('Please enter a company name or stock symbol to search', 'warning');
+                return;
+            }
+
+            // Show search suggestions for common companies
+            const suggestions = {
+                'suzlon': 'Suzlon Energy (SUZLON) - Renewable Energy Company',
+                'reliance': 'Reliance Industries (RELIANCE) - Oil & Gas Conglomerate',
+                'tcs': 'Tata Consultancy Services (TCS) - IT Services',
+                'infosys': 'Infosys Limited (INFY) - IT Services',
+                'hdfc': 'HDFC Bank (HDFCBANK) - Private Banking',
+                'icici': 'ICICI Bank (ICICIBANK) - Private Banking',
+                'wipro': 'Wipro Limited (WIPRO) - IT Services',
+                'tata motors': 'Tata Motors (TATAMOTORS) - Automotive',
+                'maruti': 'Maruti Suzuki (MARUTI) - Automotive',
+                'bajaj': 'Bajaj Finance (BAJFINANCE) - Financial Services'
+            };
+
+            let searchResults = [];
+            const searchTerm = input.toLowerCase();
+
+            // Find matching suggestions
+            for (const [key, value] of Object.entries(suggestions)) {
+                if (key.includes(searchTerm) || value.toLowerCase().includes(searchTerm)) {
+                    searchResults.push(value);
+                }
+            }
+
+            if (searchResults.length > 0) {
+                let message = '🔍 Search Results:<br><br>';
+                searchResults.forEach(result => {
+                    message += `• ${result}<br>`;
+                });
+                message += '<br>💡 Tip: Use the symbol in parentheses for analysis';
+                
+                showAlert(message, 'info');
+            } else {
+                showAlert(`No exact matches found for "${input}". Try using the stock symbol directly or search for popular Indian companies like: Suzlon, Reliance, TCS, Infosys, HDFC, ICICI`, 'warning');
+            }
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            loadMarketData();
+        }, 300000);
+    </script>
+</body>
+</html>

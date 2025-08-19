@@ -1,0 +1,356 @@
+/* Stock Analyst App - Custom Styles */
+
+:root {
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --dark-color: #343a40;
+    --light-color: #f8f9fa;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-color);
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    background-color: var(--dark-color);
+    color: white;
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+    padding: 1rem;
+}
+
+.card-title {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Market Overview */
+.market-index {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.market-index h6 {
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+}
+
+.market-index .h4 {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+/* Recommendations Table */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Progress Bars */
+.progress {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--success-color), var(--primary-color));
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* News Section */
+.news-item {
+    transition: transform 0.2s;
+}
+
+.news-item:hover {
+    transform: translateY(-2px);
+    background-color: rgba(0, 123, 255, 0.02);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.news-item h6 a {
+    color: var(--dark-color);
+    transition: color 0.2s;
+}
+
+.news-item h6 a:hover {
+    color: var(--primary-color);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    padding: 0.625rem 1.25rem;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #0056b3);
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color), #1e7e34);
+    border: none;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, var(--info-color), #117a8b);
+    border: none;
+}
+
+/* Form Controls */
+.form-control {
+    border-radius: 0.5rem;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.2s;
+    padding: 0.75rem;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+    color: #721c24;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+    color: #856404;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(23, 162, 184, 0.05));
+    color: #0c5460;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+#loadingSpinner {
+    padding: 2rem;
+}
+
+#loadingSpinner p {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-top: 1rem;
+}
+
+/* Charts */
+canvas {
+    max-height: 300px;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .market-index {
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Utility Classes */
+.text-positive {
+    color: var(--success-color) !important;
+}
+
+.text-negative {
+    color: var(--danger-color) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-color), #0056b3);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, var(--success-color), #1e7e34);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, var(--danger-color), #c82333);
+}
+
+/* Table Enhancements */
+.table-dark th {
+    background: linear-gradient(135deg, var(--dark-color), #23272b);
+}
+
+.recommendation-high {
+    border-left: 4px solid var(--success-color);
+}
+
+.recommendation-medium {
+    border-left: 4px solid var(--warning-color);
+}
+
+.recommendation-low {
+    border-left: 4px solid var(--info-color);
+}
+
+/* Interactive Elements */
+.clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clickable:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    border-radius: 0.25rem;
+}
+
+/* Status Indicators */
+.status-online {
+    color: var(--success-color);
+}
+
+.status-offline {
+    color: var(--danger-color);
+}
+
+.status-loading {
+    color: var(--warning-color);
+}
+
+/* Card Hover Effects */
+.card-hover {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
